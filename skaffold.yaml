@@ -37,3 +37,12 @@ build:
         manual:
           - src: 'src/**/*.js'
             dest: .
+    # - image: asia.gcr.io/ticketing-474615/orders
+    - image: orders
+      context: orders
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.js'
+            dest: .
