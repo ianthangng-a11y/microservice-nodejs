@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.delete('/api/orders/:orderId', requireAuth, async (req: Request, res: Response) => {
   const { orderId }  = req.params;
-  const order = await Order.findById(orderId);
+  const order = await Order.findById(orderId).populate('ticket');
   
   if (!order) {
     throw new NotFoundError();
@@ -19,6 +19,8 @@ router.delete('/api/orders/:orderId', requireAuth, async (req: Request, res: Res
   order.status = OrderStatus.Cancelled;
   await order.save();
   
+  // publishing an event saying this was cancelled!
+
   res.status(204).send(order);
 });
 
