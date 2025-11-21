@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { Order, OrderStatus } from "./order";
 
 interface TicketAttrs {
+  id?: string; // hot fix
   title: string;
   price: number;
 }
@@ -30,13 +31,17 @@ const ticketSchema = new mongoose.Schema<TicketDoc>({
   toJSON: {
     transform(doc, ret) {
       ret.id = ret._id;
-      delete ret._id;
+      // delete ret._id;
     }
   }
 });
 
 ticketSchema.statics.build = (attrs: TicketAttrs) => {
-  return new Ticket(attrs);
+  return new Ticket({
+    _id: attrs.id,
+    title: attrs.title,
+    price: attrs.price,
+  });
 }
 
 ticketSchema.methods.isReserved = async function() {

@@ -35,8 +35,12 @@ const userSchema = new mongoose.Schema<UserDoc>(
     {
       toJSON: {
         transform(doc, ret) {
-          ret.id = ret._id;
-          delete ret._id;
+          // ret.id = ret._id;
+          // delete ret._id;
+          return {
+            email: ret.email,
+            id: ret._id
+          }
         }
       }
     }
