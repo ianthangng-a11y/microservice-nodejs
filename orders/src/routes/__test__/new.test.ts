@@ -62,7 +62,7 @@ it('emits a order cancelled event', async () => {
   
   const user = global.signin();
   // make a request to create an order
-  const { body: order } = await request(app)
+  await request(app)
   .post('/api/orders')
   .set('Cookie', user)
   .send({ ticketId: ticket.id })
