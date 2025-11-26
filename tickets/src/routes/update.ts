@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import {NotAuthorizedError, NotFoundError, requireAuth, validateRequest} from "@ianticketing/common";
+import { BadRequestError, NotAuthorizedError, NotFoundError, requireAuth, validateRequest } from "@ianticketing/common";
 import {Ticket} from "../models/ticket";
 import {body} from "express-validator";
 import { TicketUpdatedPublisher } from "../events/ticket-updated-publisher";
@@ -16,10 +16,15 @@ router.put('/api/tickets/:id',
   validateRequest
   , async (req: Request, res: Response) => {
   const ticket = await Ticket.findById(req.params.id);
+  
   if(!ticket) {
     throw new NotFoundError();
   }
 
+  if(ticket.orderId) {
+    throw new BadRequestError('Cannot efit a reserved ticket.')
+  }
+  
   if (ticket.userId !== req.currentUser!.id) {
     throw new NotAuthorizedError();
   }
