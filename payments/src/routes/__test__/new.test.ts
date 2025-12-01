@@ -4,6 +4,7 @@ import { app } from '../../app';
 import { Order } from '../../models/order';
 import { OrderStatus } from "@ianticketing/common";
 import { stripe } from "../../stripe";
+import { Payment } from "../../models/payment";
 
 jest.mock('../../stripe');
 
@@ -77,7 +78,11 @@ it('returns a 201 with valid input', async () => {
   })
   .expect(201);
   
-  // const chargeOptions = (stripe.charges.create as jest.Mock).mock.calls[0][0];
+  stripe.charges.list = jest.fn().mockResolvedValue({
+    data: [
+      { id: 'test_charge_id', amount: price * 100, currency: 'usd' }
+    ]
+  });
   
   const stripeCharges = await stripe.charges.list({ limit: 3 });
   const stripeCharge = stripeCharges.data.find(charge => {
@@ -87,4 +92,10 @@ it('returns a 201 with valid input', async () => {
   expect(stripeCharge).toBeDefined();
   expect(stripeCharge!.currency).toEqual('usd');
   
+  const payment = await Payment.findOne({
+    orderId: order.id,
+    stripeId: stripeCharge!.id,
+  });
+  
+  expect(payment).not.toBeNull();
 });

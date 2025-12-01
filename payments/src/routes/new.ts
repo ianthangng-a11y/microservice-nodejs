@@ -10,6 +10,9 @@ import {
 import { body } from "express-validator";
 import { Order } from "../models/order";
 import { stripe } from "../stripe";
+import { Payment } from "../models/payment";
+import { PaymentCreatedPublisher } from "../publisher/payment-created-publisher";
+import { natsWrapper } from "../nats-wrapper";
 
 const router = express.Router();
 
@@ -36,12 +39,29 @@ router.post('/api/payments', requireAuth,
       throw new BadRequestError('Cannot pay for a cancelled order.');
     }
     
-    await stripe.charges.create({
+    const charge = await stripe.charges.create({
       currency: 'usd',
       amount: order.price * 100,
       source: token,
     })
-    res.send({ success: true });
+    const payment = Payment.build({
+      orderId,
+      stripeId: charge.id
+    });
+    console.log(payment, 'what is that?');
+    await payment.save();
+    new PaymentCreatedPublisher(natsWrapper.client).publish({
+      id: payment.id,
+      orderId: payment.orderId,
+      stripeId: payment.stripeId,
+    });
+    
+    // console.log('Charge list', charge);
+    
+    // 2. Lấy danh sách charges gần đây
+    // const chargesList = await stripe.charges.list({ limit: 10 });
+    // console.log('List of charges:', chargesList);
+    res.status(201).send({ id: payment.id });
 });
 
 export { router as createChargeRouter };
